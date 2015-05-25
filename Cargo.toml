@@ -1,0 +1,8 @@
+[package]
+name = "rusty-magento"
+version = "0.1.0"
+authors = ["Casey Allred <sbditto@gmail.com>"]
+
+[lib]
+name = "modules"
+path = "src/lib.rs"
