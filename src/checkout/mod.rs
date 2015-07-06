@@ -1,8 +1,8 @@
 
-#[cfg(not(dosomething="local"))]
+#[cfg(not(checkout_dosomething="local"))]
 pub use self::core::dosomething;
 
-#[cfg(dosomething="local")]
+#[cfg(checkout_dosomething="local")]
 pub use self::local::dosomething;
 
 //not overridden

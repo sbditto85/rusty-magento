@@ -6,8 +6,9 @@ use iron::status;
 use router::{Router};
 
 pub fn init(router: &mut Router) {
-    router.get("/catalog/", |_: &mut Request| Ok(Response::with((status::Ok, "Catalog routed!"))));
+    router.get("/checkout/", |_: &mut Request| Ok(Response::with((status::Ok, "Checkout routed!"))));
 }
+
 
 pub fn dosomething() {
     println!("core");

@@ -2,7 +2,15 @@
 name = "rusty-magento"
 version = "0.1.0"
 authors = ["Casey Allred <sbditto@gmail.com>"]
+build = "build.rs"
 
 [lib]
 name = "modules"
 path = "src/lib.rs"
+
+[dependencies]
+iron = "*"
+iron_vhosts = "*"
+handlebars-iron = "*"
+router = "*"
+rustc-serialize = "*"
