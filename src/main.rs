@@ -23,6 +23,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::sync::Arc;
 use std::path::Path;
+use std::thread;
 
 fn make_data () -> BTreeMap<String, Json> {
     let mut data = BTreeMap::new();
@@ -58,7 +59,7 @@ impl AfterMiddleware for FourOhFour {
     }
 }
 
-fn main () {
+fn create_server() -> Iron<Chain> {
     //Default handler passed to new
     let mut vhosts = Vhosts::new(|_: &mut Request| Ok(Response::with((status::Ok, "vhost"))));
     
@@ -80,7 +81,29 @@ fn main () {
 
     chain.link_after(template_engine_ref);
     chain.link_after(FourOhFour);
+    
 
-    println!("Server running at http://localhost:3000/");
-    Iron::new(chain).http("localhost:3000").unwrap();
+    Iron::new(chain)
+}
+
+fn main () {
+
+    let servers = vec!["localhost:3000", "localhost:3001"];
+    let mut processes = Vec::new();
+    
+    for server in servers {
+        let child = thread::spawn(move || {
+            let iron = create_server();
+            println!("Server running at {}", server);
+            iron.http(server).unwrap();
+        });
+        processes.push(child);
+    }
+
+    for process in processes {
+        match process.join() {
+            Ok(_) => println!("Ran successfully"),
+            Err(_) => println!("nope not even once")
+        }
+    }
 }
