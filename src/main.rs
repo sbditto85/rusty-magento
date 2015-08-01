@@ -4,15 +4,25 @@ extern crate handlebars_iron as hbs;
 extern crate router;
 extern crate rustc_serialize;
 extern crate modules;
+extern crate mount;
+extern crate staticfile;
 
 use iron::prelude::*;
 use iron::{status};
+use iron::middleware::AfterMiddleware;
+use iron::headers::{ContentType};
+use iron::modifiers::Header;
+use iron::mime::{Mime, TopLevel, SubLevel};
 use iron_vhosts::Vhosts;
 use hbs::{Template, HandlebarsEngine }; //, Watchable}; // Watchable doesn't appear to work 100%
+use mount::Mount;
+use staticfile::Static;
 use rustc_serialize::json::{ToJson, Json};
 use router::{Router};
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::sync::Arc;
+use std::path::Path;
 
 fn make_data () -> BTreeMap<String, Json> {
     let mut data = BTreeMap::new();
@@ -29,13 +39,34 @@ fn hello_world(_: &mut Request) -> IronResult<Response> {
     Ok(resp)
 }
 
+struct FourOhFour;
+
+impl AfterMiddleware for FourOhFour {
+    fn after(&self, _: &mut Request, res: Response) -> IronResult<Response> {
+        //do nothing 'cause we dont care
+        Ok(res)
+    }
+
+    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
+        match err.description() {
+            "No Route" => {
+                let header = Header(ContentType(Mime(TopLevel::Text, SubLevel::Html, vec![])));
+                Ok(Response::with((status::NotFound, header, "<html><head><title>File not found</title></head><body>Could not find the requested URL.</body></html>")))}
+            ,
+            _ => Err(err)
+        }
+    }
+}
+
 fn main () {
     //Default handler passed to new
     let mut vhosts = Vhosts::new(|_: &mut Request| Ok(Response::with((status::Ok, "vhost"))));
     
     //Add any host specific handlers
     vhosts.add_host("localhost", hello_world);
-    vhosts.add_host("media", |_: &mut Request| Ok(Response::with((status::Ok, "media"))));
+    let mut mount = Mount::new();
+    mount.mount("/",Static::new(Path::new("media")));
+    vhosts.add_host("media", mount);
 
     //initialize modules and their routes
     let mut router = Router::new();
@@ -48,35 +79,8 @@ fn main () {
     //template_engine_ref.watch();
 
     chain.link_after(template_engine_ref);
+    chain.link_after(FourOhFour);
 
     println!("Server running at http://localhost:3000/");
     Iron::new(chain).http("localhost:3000").unwrap();
 }
-
-
-// extern crate modules;
-
-// use modules::catalog;
-// use modules::checkout;
-
-// fn main() {
-//     println!("dosomething()");
-//     catalog::dosomething();
-//     {
-//         println!("modules::catalog::core::dosomething()");
-//         modules::catalog::core::dosomething();
-//     }
-//     println!("modules::catalog::local::dosomething()");
-//     modules::catalog::local::dosomething();
-
-//     println!("<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>");
-
-//     println!("dosomething()");
-//     checkout::dosomething();
-//     {
-//         println!("modules::checkout::core::dosomething()");
-//         modules::checkout::core::dosomething();
-//     }
-//     println!("modules::checkout::local::dosomething()");
-//     modules::checkout::local::dosomething();
-// }
