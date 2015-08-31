@@ -7,6 +7,7 @@ use router::{Router};
 
 pub mod catalog;
 pub mod checkout;
+pub mod service;
 
 pub fn init(router: &mut Router) {
     //For testing and stuff

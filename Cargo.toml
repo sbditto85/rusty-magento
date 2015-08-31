@@ -16,3 +16,6 @@ mount = "*"
 router = "*"
 rustc-serialize = "*"
 staticfile = "*"
+
+[dependencies.sb_service]
+path = "../sb_service/"
